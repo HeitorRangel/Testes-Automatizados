@@ -1,0 +1,9 @@
+### Teste de solicitação de cancelamento de disciplina
+POST http://localhost:3000/cancelamento
+Content-Type: application/json
+
+{
+  "alunoId": "123",
+  "disciplinaId": "456",
+  "motivo": "Mudança de curso"
+}
