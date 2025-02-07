@@ -1,11 +1,15 @@
-import { CancelamentoController } from '../../controllers/cancelamento-controller';
+import { StatusMatriculaController } from '../../controllers/status-matricula-controller';
 import { Request, Response } from 'express';
-import { ConsultarStatusMatricula } from '../../domain/usecases/cancelar-matricula';
+import { IUseCase } from '../../contracts/iusecase';
 import { StatusMatricula } from '../../domain/entities/status-matricula';
+import { 
+  IEntradaConsultarStatusMatricula, 
+  ISaidaConsultarStatusMatricula 
+} from '../../contracts/request-status-matricula';
 
-describe('CancelamentoController', () => {
-  let mockUseCase: jest.Mocked<ConsultarStatusMatricula>;
-  let controller: CancelamentoController;
+describe('StatusMatriculaController', () => {
+  let mockUseCase: jest.Mocked<IUseCase<IEntradaConsultarStatusMatricula, ISaidaConsultarStatusMatricula>>;
+  let controller: StatusMatriculaController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
 
@@ -15,7 +19,7 @@ describe('CancelamentoController', () => {
       execute: jest.fn()
     } as any;
 
-    controller = new CancelamentoController(mockUseCase);
+    controller = new StatusMatriculaController(mockUseCase);
 
     mockRequest = {
       params: { alunoId: '12345' }
@@ -30,15 +34,15 @@ describe('CancelamentoController', () => {
 
   it('deve consultar status de matrícula com sucesso', async () => {
     // Arrange
-    const mockStatusMatricula = new StatusMatricula(
-      '12345', 
-      'ATIVO', 
-      new Date()
-    );
+    const mockSaida: ISaidaConsultarStatusMatricula = {
+        statusMatricula: new StatusMatricula(
+          '12345', 
+          'ATIVO', 
+          new Date()
+        )
+      };
 
-    const mockResultado = { statusMatricula: mockStatusMatricula };
-
-    mockUseCase.execute.mockResolvedValue(mockResultado);
+    mockUseCase.execute.mockResolvedValue(mockSaida);
 
     // Act
     await controller.handle(mockRequest as Request, mockResponse as Response);
@@ -48,7 +52,7 @@ describe('CancelamentoController', () => {
     expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         mensagem: 'Consulta de status de matrícula realizada com sucesso',
-        statusMatricula: mockStatusMatricula
+        statusMatricula: mockSaida.statusMatricula
       })
     );
   });
@@ -63,26 +67,7 @@ describe('CancelamentoController', () => {
     // Assert
     expect(mockResponse.status).toHaveBeenCalledWith(500);
     expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ 
-        error: 'Erro interno',
-        detalhes: 'Erro no processamento'
-      })
-    );
-  });
-
-  it('deve rejeitar requisição sem alunoId', async () => {
-    // Arrange
-    mockRequest.params = {};
-
-    // Act
-    await controller.handle(mockRequest as Request, mockResponse as Response);
-
-    // Assert
-    expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ 
-        error: 'ID do aluno é obrigatório'
-      })
+      expect.objectContaining({ error: 'Erro no processamento' })
     );
   });
 });

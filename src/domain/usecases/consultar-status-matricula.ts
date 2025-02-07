@@ -1,7 +1,7 @@
 import { IUseCase } from "../../contracts/iusecase";
-import { StatusMatricula } from "../entities/status-matricula"; // Remover esta linha
 import { IEntradaConsultarStatusMatricula, ISaidaConsultarStatusMatricula } from "../../contracts/request-status-matricula";
 import { IRepository } from "../../contracts/irepository";
+import { StatusMatricula } from "../entities/status-matricula";
 
 export class ConsultarStatusMatricula implements IUseCase<IEntradaConsultarStatusMatricula, ISaidaConsultarStatusMatricula> {
     private repo: IRepository<StatusMatricula>;
@@ -31,9 +31,6 @@ export class ConsultarStatusMatricula implements IUseCase<IEntradaConsultarStatu
         // Validações de negócio
         if (!statusMatricula) {
             throw new Error('Status de matrícula não encontrado');
-        }
-        if (statusMatricula.disciplinasMatriculadas && statusMatricula.disciplinasMatriculadas.length === 0) {
-            throw new Error('Aluno não está matriculado em nenhuma disciplina');
         }
 
         // Retorno estruturado

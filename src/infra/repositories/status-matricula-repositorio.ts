@@ -14,14 +14,13 @@ export class StatusMatriculaRepositorio implements IRepository<StatusMatricula> 
             return new StatusMatricula(
                 alunoId,
                 'ATIVO',
-                ['Matemática', 'Português'],
                 new Date()
             );
         }
         return undefined;
     }
 
-    async create(id: string, obj: StatusMatricula): Promise<StatusMatricula> {
+    async create(obj: StatusMatricula): Promise<StatusMatricula> {
         // Implementação de criação
         return obj;
     }
