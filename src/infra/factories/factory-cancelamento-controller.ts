@@ -1,5 +1,5 @@
 import { CancelamentoController } from "../../controllers/cancelamento-controller";
-import { CancelarDisciplina } from "../../domain/usecases/cancelar-disciplina";
+import { CancelarDisciplina } from "../../domain/usecases/cancelar-matricula";
 
 export function makeCancelamentoController(): CancelamentoController {
   const cancelarDisciplina = new CancelarDisciplina();

@@ -1,6 +1,9 @@
-export interface RequestCancelamento {
+import { StatusMatricula } from '../domain/entities/status-matricula';
+
+export interface IEntradaCancelarMatricula {
     alunoId: string;
-    disciplinaId: string;
-    motivo: string;
-  }
-  
+}
+
+export interface ISaidaCancelarMatricula {
+    statusMatricula: StatusMatricula;
+}

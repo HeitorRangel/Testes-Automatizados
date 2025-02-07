@@ -1,15 +1,22 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { CancelamentoController } from '../../controllers/cancelamento-controller';
-import { CancelarDisciplina } from '../../domain/usecases/cancelar-disciplina';
+import { ConsultarStatusMatricula } from '../../domain/usecases/cancelar-matricula';
+import { StatusMatriculaRepositorio } from '../repositories/status-matricula-repositorio';
 
 export const cancelamentoRouter = Router();
-const cancelarDisciplina = new CancelarDisciplina();
-const cancelamentoController = new CancelamentoController(cancelarDisciplina);
 
-cancelamentoRouter.post("/", async (req, res, next) => {
-    try {
-      await cancelamentoController.handle(req, res);
-    } catch (error) {
-      next(error);
+const statusMatriculaRepositorio = new StatusMatriculaRepositorio();
+const consultarStatusMatricula = new ConsultarStatusMatricula(statusMatriculaRepositorio);
+const cancelamentoController = new CancelamentoController(consultarStatusMatricula);
+
+cancelamentoRouter.get("/:alunoId", (req, res) => {
+    const validacaoEntrada = cancelamentoController.validarEntrada(req);
+    if (validacaoEntrada) {
+        return res.status(400).json({ error: validacaoEntrada });
     }
-  });
+
+    cancelamentoController.handle(req, res)
+        .catch(error => {
+            res.status(500).json({ error: error.message });
+        });
+});
