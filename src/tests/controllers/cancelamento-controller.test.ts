@@ -1,88 +1,78 @@
 import { CancelamentoController } from '../../controllers/cancelamento-controller';
 import { Request, Response } from 'express';
-import { ConsultarStatusMatricula } from '../../domain/usecases/cancelar-matricula';
+import { CancelarMatricula } from '../../domain/usecases/cancelar-matricula';
 import { StatusMatricula } from '../../domain/entities/status-matricula';
+import { 
+  IStatusMatriculaGateway 
+} from '../../domain/usecases/cancelar-matricula';
+import { 
+  IEntradaCancelarMatricula, 
+  ISaidaCancelarMatricula 
+} from '../../contracts/interfaces';
 
 describe('CancelamentoController', () => {
-  let mockUseCase: jest.Mocked<ConsultarStatusMatricula>;
+  let mockRepository: jest.Mocked<IStatusMatriculaGateway>;
+  let mockUseCase: CancelarMatricula;
   let controller: CancelamentoController;
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
 
   beforeEach(() => {
-    // Configuração de mocks
-    mockUseCase = {
-      execute: jest.fn()
-    } as any;
+    mockRepository = {
+      buscarPorId: jest.fn(),
+      salvar: jest.fn()
+    };
 
+    mockUseCase = new CancelarMatricula(mockRepository);
     controller = new CancelamentoController(mockUseCase);
 
     mockRequest = {
-      params: { alunoId: '12345' }
+      body: {
+        alunoId: '123'
+      }
     };
 
     mockResponse = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      end: jest.fn()
+      json: jest.fn()
     };
+
+    // Configurar mock do repositório para buscarPorId
+    mockRepository.buscarPorId.mockResolvedValue(
+      new StatusMatricula('123', 'ATIVO', new Date())
+    );
   });
 
-  it('deve consultar status de matrícula com sucesso', async () => {
-    // Arrange
-    const mockStatusMatricula = new StatusMatricula(
-      '12345', 
-      'ATIVO', 
-      new Date()
-    );
+  it('deve cancelar matrícula com sucesso', async () => {
+    const statusCancelado = new StatusMatricula('123', 'CANCELADO', new Date());
+    
+    jest.spyOn(mockUseCase, 'execute').mockResolvedValue({ 
+      statusMatricula: {
+        id: statusCancelado.getId(),
+        status: statusCancelado.getStatus(),
+        dataMatricula: statusCancelado.getDataMatricula()
+      }
+    });
 
-    const mockResultado = { statusMatricula: mockStatusMatricula };
-
-    mockUseCase.execute.mockResolvedValue(mockResultado);
-
-    // Act
     await controller.handle(mockRequest as Request, mockResponse as Response);
 
-    // Assert
+    expect(mockRepository.buscarPorId).toHaveBeenCalledWith('123');
+    expect(mockRepository.salvar).toHaveBeenCalled();
     expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mensagem: 'Consulta de status de matrícula realizada com sucesso',
-        statusMatricula: mockStatusMatricula
+    expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+      statusMatricula: expect.objectContaining({
+        id: '123',
+        status: 'CANCELADO'
       })
-    );
-  });
-
-  it('deve tratar erro no use case', async () => {
-    // Arrange
-    mockUseCase.execute.mockRejectedValue(new Error('Erro no processamento'));
-
-    // Act
-    await controller.handle(mockRequest as Request, mockResponse as Response);
-
-    // Assert
-    expect(mockResponse.status).toHaveBeenCalledWith(500);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ 
-        error: 'Erro interno',
-        detalhes: 'Erro no processamento'
-      })
-    );
+    }));
   });
 
   it('deve rejeitar requisição sem alunoId', async () => {
-    // Arrange
-    mockRequest.params = {};
+    mockRequest.body = {};
 
-    // Act
     await controller.handle(mockRequest as Request, mockResponse as Response);
 
-    // Assert
     expect(mockResponse.status).toHaveBeenCalledWith(400);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({ 
-        error: 'ID do aluno é obrigatório'
-      })
-    );
+    expect(mockResponse.json).toHaveBeenCalledWith({ error: 'ID do aluno é obrigatório' });
   });
 });

@@ -1,60 +1,37 @@
-import { StatusMatriculaController } from '../../controllers/status-matricula-controller';
-import { Request, Response } from 'express';
-import { IUseCase } from '../../contracts/iusecase';
+import { ConsultarStatusMatricula } from '../../domain/usecases/consultar-status-matricula';
+import { IStatusMatriculaGateway } from '../../domain/usecases/cancelar-matricula';
 import { StatusMatricula } from '../../domain/entities/status-matricula';
-import { 
-  IEntradaConsultarStatusMatricula, 
-  ISaidaConsultarStatusMatricula 
-} from '../../contracts/request-status-matricula';
 
-describe('StatusMatriculaController', () => {
-  let mockUseCase: jest.Mocked<IUseCase<IEntradaConsultarStatusMatricula, ISaidaConsultarStatusMatricula>>;
-  let controller: StatusMatriculaController;
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+// Mock do Gateway
+class MockStatusMatriculaGateway implements IStatusMatriculaGateway {
+  private matriculas: StatusMatricula[] = [];
 
-  beforeEach(() => {
-    // Configuração de mocks
-    mockUseCase = {
-      execute: jest.fn()
-    } as any;
+  constructor(matriculas: StatusMatricula[]) {
+    this.matriculas = matriculas;
+  }
 
-    controller = new StatusMatriculaController(mockUseCase);
+  async buscarPorId(alunoId: string): Promise<StatusMatricula | null> {
+    return this.matriculas.find(m => m.getId() === alunoId) || null;
+  }
 
-    mockRequest = {
-      params: { alunoId: '12345' }
-    };
+  async salvar(matricula: StatusMatricula): Promise<void> {
+    // Implementação mock
+  }
+}
 
-    mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis(),
-      end: jest.fn()
-    };
-  });
-
+describe('ConsultarStatusMatricula', () => {
   it('deve consultar status de matrícula com sucesso', async () => {
-    // Arrange
-    const mockSaida: ISaidaConsultarStatusMatricula = {
-        statusMatricula: new StatusMatricula(
-          '12345', 
-          'ATIVO', 
-          new Date()
-        )
-      };
+    const matricula = new StatusMatricula('12345', 'ATIVO', new Date());
+    const mockGateway = new MockStatusMatriculaGateway([matricula]);
+    const useCase = new ConsultarStatusMatricula(mockGateway);
 
-    mockUseCase.execute.mockResolvedValue(mockSaida);
+    const resultado = await useCase.execute({ alunoId: '12345' });
 
-    // Act
-    await controller.handle(mockRequest as Request, mockResponse as Response);
-
-    // Assert
-    expect(mockResponse.status).toHaveBeenCalledWith(200);
-    expect(mockResponse.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mensagem: 'Consulta de status de matrícula realizada com sucesso',
-        statusMatricula: mockSaida.statusMatricula
-      })
-    );
+    expect(resultado.statusMatricula).toEqual({
+      id: '12345',
+      status: 'ATIVO',
+      dataMatricula: expect.any(Date)
+    });
   });
 
   it('deve tratar erro no use case', async () => {

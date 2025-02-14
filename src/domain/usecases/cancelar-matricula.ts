@@ -1,35 +1,51 @@
-import { IUseCase } from "../../contracts/iusecase";
-import { StatusMatricula } from "../entities/status-matricula";
-import { IStatusMatriculaRepository } from "../../contracts/request-status-matricula";
-import { IEntradaCancelarMatricula, ISaidaCancelarMatricula } from "../../contracts/request_cancelamento";
-
-export class ConsultarStatusMatricula implements IUseCase<IEntradaCancelarMatricula, ISaidaCancelarMatricula> {
-    constructor(private repo: IStatusMatriculaRepository) {
-        console.log('ConsultarStatusMatricula instanciado');
-    }
-
-    async execute(entrada: IEntradaCancelarMatricula): Promise<ISaidaCancelarMatricula> {
-        // Validações de entrada
-        if (!entrada.alunoId) {
-            throw new Error('ID do aluno é obrigatório');
-        }
-
-        // Busca no repositório com tratamento de erro
-        let todosStatusMatricula: StatusMatricula[];
-        try {
-            todosStatusMatricula = await this.repo.findAll();
-        } catch(e) {
-            throw new Error('Erro ao buscar status da matrícula');
-        }
-
-        // Filtrar status específico do aluno
-        const statusMatricula = todosStatusMatricula.find(status => status.alunoId === entrada.alunoId);
-
-        // Validações de negócio
-        if (!statusMatricula) {
-            throw new Error('Status da matrícula não encontrado');
-        }
-
-        return { statusMatricula };
-    }
-}
+import { 
+    IEntradaCancelarMatricula, 
+    ISaidaCancelarMatricula, 
+    IStatusMatricula 
+  } from '../../contracts/interfaces';
+  
+  export class CancelamentoError extends Error {
+      constructor(message: string) {
+          super(message);
+          this.name = 'CancelamentoError';
+      }
+  }
+  
+  export interface IStatusMatriculaGateway {
+      buscarPorId(alunoId: string): Promise<IStatusMatricula | null>;
+      salvar(matricula: IStatusMatricula): Promise<void>;
+  }
+  
+  export class CancelarMatricula {
+      constructor(private gateway: IStatusMatriculaGateway) {}
+  
+      async execute(entrada: IEntradaCancelarMatricula): Promise<ISaidaCancelarMatricula> {
+          // Validações de negócio
+          if (!entrada.alunoId) {
+              throw new CancelamentoError('ID do aluno é obrigatório');
+          }
+  
+          // Busca da matrícula
+          const matricula = await this.gateway.buscarPorId(entrada.alunoId);
+  
+          // Validações de negócio
+          if (!matricula) {
+              throw new CancelamentoError('Matrícula não encontrada');
+          }
+  
+          // Regra de negócio de cancelamento
+          matricula.cancelar();
+  
+          // Persistência
+          await this.gateway.salvar(matricula);
+  
+          // Retorno agnóstico
+          return {
+              statusMatricula: {
+                  id: matricula.getId(),
+                  status: matricula.getStatus(),
+                  dataMatricula: matricula.getDataMatricula()
+              }
+          };
+      }
+  }
