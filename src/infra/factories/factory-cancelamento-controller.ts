@@ -1,7 +1,9 @@
 import { CancelamentoController } from "../../controllers/cancelamento-controller";
-import { CancelarDisciplina } from "../../domain/usecases/cancelar-matricula";
+import { CancelarMatricula } from "../../domain/usecases/cancelar-matricula";
+import { StatusMatriculaGateway } from "../gateways/status-matricula-gateway";
 
 export function makeCancelamentoController(): CancelamentoController {
-  const cancelarDisciplina = new CancelarDisciplina();
-  return new CancelamentoController(cancelarDisciplina);
+  const statusMatriculaGateway = new StatusMatriculaGateway();
+  const cancelarMatricula = new CancelarMatricula(statusMatriculaGateway);
+  return new CancelamentoController(cancelarMatricula);
 }

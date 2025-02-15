@@ -1,5 +1,3 @@
-import { StatusMatricula } from '../domain/entities/status-matricula';
-
 export interface IEntradaCancelarMatricula {
   alunoId: string;
 }
@@ -19,14 +17,7 @@ export interface IStatusMatricula {
   cancelar(): void;
 }
 
-export interface IEntradaConsultarStatusMatricula {
-  alunoId: string;
-}
-
-export interface ISaidaConsultarStatusMatricula {
-  statusMatricula: {
-    id: string;
-    status: string;
-    dataMatricula: Date;
-  };
+export interface IStatusMatriculaGateway {
+  buscarPorId(alunoId: string): Promise<IStatusMatricula | null>;
+  salvar(matricula: IStatusMatricula): Promise<void>;
 }

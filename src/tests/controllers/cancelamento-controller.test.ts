@@ -1,19 +1,36 @@
 import { CancelamentoController } from '../../controllers/cancelamento-controller';
 import { Request, Response } from 'express';
 import { CancelarMatricula } from '../../domain/usecases/cancelar-matricula';
-import { StatusMatricula } from '../../domain/entities/status-matricula';
-import { 
-  IStatusMatriculaGateway 
-} from '../../domain/usecases/cancelar-matricula';
-import { 
-  IEntradaCancelarMatricula, 
-  ISaidaCancelarMatricula 
-} from '../../contracts/interfaces';
+import { IStatusMatriculaGateway, IStatusMatricula } from '../../contracts/interfaces';
+
+class MockStatusMatricula implements IStatusMatricula {
+  constructor(
+    private id: string,
+    private status: string,
+    private dataMatricula: Date
+  ) {}
+
+  getId(): string {
+    return this.id;
+  }
+
+  getStatus(): string {
+    return this.status;
+  }
+
+  getDataMatricula(): Date {
+    return this.dataMatricula;
+  }
+
+  cancelar(): void {
+    this.status = 'CANCELADO';
+  }
+}
 
 describe('CancelamentoController', () => {
   let mockRepository: jest.Mocked<IStatusMatriculaGateway>;
   let mockUseCase: CancelarMatricula;
-  let controller: CancelamentoController;
+  let sut: CancelamentoController; // SUT (System Under Test)
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
 
@@ -24,10 +41,10 @@ describe('CancelamentoController', () => {
     };
 
     mockUseCase = new CancelarMatricula(mockRepository);
-    controller = new CancelamentoController(mockUseCase);
+    sut = new CancelamentoController(mockUseCase); // SUT
 
     mockRequest = {
-      body: {
+      params: {
         alunoId: '123'
       }
     };
@@ -39,12 +56,12 @@ describe('CancelamentoController', () => {
 
     // Configurar mock do repositório para buscarPorId
     mockRepository.buscarPorId.mockResolvedValue(
-      new StatusMatricula('123', 'ATIVO', new Date())
+      new MockStatusMatricula('123', 'ATIVO', new Date())
     );
   });
 
   it('deve cancelar matrícula com sucesso', async () => {
-    const statusCancelado = new StatusMatricula('123', 'CANCELADO', new Date());
+    const statusCancelado = new MockStatusMatricula('123', 'CANCELADO', new Date());
     
     jest.spyOn(mockUseCase, 'execute').mockResolvedValue({ 
       statusMatricula: {
@@ -54,12 +71,13 @@ describe('CancelamentoController', () => {
       }
     });
 
-    await controller.handle(mockRequest as Request, mockResponse as Response);
+    await sut.handle(mockRequest as Request, mockResponse as Response);
 
     expect(mockRepository.buscarPorId).toHaveBeenCalledWith('123');
     expect(mockRepository.salvar).toHaveBeenCalled();
     expect(mockResponse.status).toHaveBeenCalledWith(200);
     expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+      mensagem: 'Cancelamento de matrícula realizado com sucesso',
       statusMatricula: expect.objectContaining({
         id: '123',
         status: 'CANCELADO'
@@ -68,11 +86,20 @@ describe('CancelamentoController', () => {
   });
 
   it('deve rejeitar requisição sem alunoId', async () => {
-    mockRequest.body = {};
+    mockRequest.params = {};
 
-    await controller.handle(mockRequest as Request, mockResponse as Response);
+    await sut.handle(mockRequest as Request, mockResponse as Response);
 
     expect(mockResponse.status).toHaveBeenCalledWith(400);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'ID do aluno é obrigatório' });
+  });
+
+  it('deve retornar erro se a matrícula não for encontrada', async () => {
+    mockRepository.buscarPorId.mockResolvedValue(null);
+
+    await sut.handle(mockRequest as Request, mockResponse as Response);
+
+    expect(mockResponse.status).toHaveBeenCalledWith(500);
+    expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Erro interno', detalhes: 'Matrícula não encontrada' });
   });
 });

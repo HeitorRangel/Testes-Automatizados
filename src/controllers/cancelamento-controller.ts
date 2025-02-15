@@ -1,9 +1,8 @@
 import { Request, Response } from "express";
-import { ConsultarStatusMatricula } from "../domain/usecases/cancelar-matricula";
-import { StatusMatricula } from "../domain/entities/status-matricula";
+import { CancelarMatricula } from "../domain/usecases/cancelar-matricula";
 
 export class CancelamentoController {
-    constructor(private consultarStatusMatricula: ConsultarStatusMatricula) {
+    constructor(private cancelarMatricula: CancelarMatricula) {
         console.log('CancelamentoController instanciado');
     }
 
@@ -17,17 +16,11 @@ export class CancelamentoController {
 
         try {
             const { alunoId } = request.params;
-            const resultado = await this.consultarStatusMatricula.execute({ alunoId });
-
-            // Validação de saída
-            if (this.validarSaida(resultado.statusMatricula)) {
-                response.status(500).json({ error: 'Retorno inválido do caso de uso' });
-                return;
-            }
+            const resultado = await this.cancelarMatricula.execute({ alunoId });
 
             // Resposta estruturada
             const respostaFormatada = {
-                mensagem: 'Consulta de status de matrícula realizada com sucesso',
+                mensagem: 'Cancelamento de matrícula realizado com sucesso',
                 statusMatricula: resultado.statusMatricula
             };
 
@@ -46,11 +39,5 @@ export class CancelamentoController {
             return 'ID do aluno é obrigatório';
         }
         return null;
-    }
-
-    private validarSaida(statusMatricula: StatusMatricula | undefined): boolean {
-        return !statusMatricula || 
-               !statusMatricula.alunoId || 
-               !statusMatricula.status;
     }
 }

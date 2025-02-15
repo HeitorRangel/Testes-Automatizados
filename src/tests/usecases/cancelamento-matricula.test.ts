@@ -1,67 +1,81 @@
-import { StatusMatricula } from '../../domain/entities/status-matricula';
-import { Cancelamento } from '../../domain/entities/cancelamento';
-import { IStatusMatriculaRepository } from '../../contracts/request-status-matricula';
 import { CancelarMatricula, CancelamentoError } from '../../domain/usecases/cancelar-matricula';
+import { IStatusMatriculaGateway, IEntradaCancelarMatricula, IStatusMatricula } from '../../contracts/interfaces';
 
-// Mock para o repositório de status de matrícula
-class MockStatusMatriculaRepository implements IStatusMatriculaRepository {
-    private statusMatriculas: StatusMatricula[] = [];
+class MockStatusMatriculaGateway implements IStatusMatriculaGateway {
+    private matriculas: IStatusMatricula[] = [];
 
-    async findAll(): Promise<StatusMatricula[]> {
-        return this.statusMatriculas;
+    async buscarPorId(alunoId: string): Promise<IStatusMatricula | null> {
+        return this.matriculas.find(m => m.getId() === alunoId) || null;
     }
 
-    async update(id: string, obj: StatusMatricula): Promise<StatusMatricula> {
-        const index = this.statusMatriculas.findIndex(status => status.alunoId === id);
+    async salvar(matricula: IStatusMatricula): Promise<void> {
+        const index = this.matriculas.findIndex(m => m.getId() === matricula.getId());
         if (index !== -1) {
-            this.statusMatriculas[index] = obj;
+            this.matriculas[index] = matricula;
+        } else {
+            this.matriculas.push(matricula);
         }
-        return obj;
+    }
+}
+
+class MockStatusMatricula implements IStatusMatricula {
+    private id: string;
+    private status: string;
+    private dataMatricula: Date;
+
+    constructor(id: string, status: string, dataMatricula: Date) {
+        this.id = id;
+        this.status = status;
+        this.dataMatricula = dataMatricula;
     }
 
-    // Métodos adicionais para teste
-    adicionarStatusMatricula(statusMatricula: StatusMatricula): void {
-        this.statusMatriculas.push(statusMatricula);
+    getId(): string {
+        return this.id;
+    }
+
+    getStatus(): string {
+        return this.status;
+    }
+
+    getDataMatricula(): Date {
+        return this.dataMatricula;
+    }
+
+    cancelar(): void {
+        this.status = 'cancelado';
     }
 }
 
 describe('CancelarMatricula', () => {
-    let mockRepository: MockStatusMatriculaRepository;
+    let gateway: IStatusMatriculaGateway;
     let cancelarMatricula: CancelarMatricula;
 
     beforeEach(() => {
-        mockRepository = new MockStatusMatriculaRepository();
-        cancelarMatricula = new CancelarMatricula(mockRepository);
+        gateway = new MockStatusMatriculaGateway();
+        cancelarMatricula = new CancelarMatricula(gateway);
     });
 
-    it('deve cancelar uma matrícula ativa', async () => {
-        // Preparação
-        const statusMatriculaAtivo = new StatusMatricula('aluno123', 'ATIVO', new Date());
-        mockRepository.adicionarStatusMatricula(statusMatriculaAtivo);
+    it('deve lançar um erro se o ID do aluno não for fornecido', async () => {
+        const entrada: IEntradaCancelarMatricula = { alunoId: '' };
 
-        // Execução
-        const resultado = await cancelarMatricula.execute({ alunoId: 'aluno123' });
-
-        // Verificações
-        expect(resultado.statusMatricula.status).toBe('CANCELADO');
-        expect(resultado.statusMatricula.alunoId).toBe('aluno123');
+        await expect(cancelarMatricula.execute(entrada)).rejects.toThrow(CancelamentoError);
     });
 
-    it('deve lançar erro ao tentar cancelar matrícula já cancelada', async () => {
-        // Preparação
-        const statusMatriculaCancelado = new StatusMatricula('aluno456', 'CANCELADO', new Date());
-        mockRepository.adicionarStatusMatricula(statusMatriculaCancelado);
+    it('deve lançar um erro se a matrícula não for encontrada', async () => {
+        const entrada: IEntradaCancelarMatricula = { alunoId: '123' };
 
-        // Execução e Verificação
-        await expect(
-            cancelarMatricula.execute({ alunoId: 'aluno456' })
-        ).rejects.toThrow(CancelamentoError);
+        await expect(cancelarMatricula.execute(entrada)).rejects.toThrow(CancelamentoError);
     });
 
-    it('deve lançar erro ao tentar cancelar matrícula inexistente', async () => {
-        // Execução e Verificação
-        await expect(
-            cancelarMatricula.execute({ alunoId: 'aluno789' })
-        ).rejects.toThrow(CancelamentoError);
+    it('deve cancelar a matrícula se todos os dados estiverem corretos', async () => {
+        const matricula = new MockStatusMatricula('123', 'ativo', new Date());
+
+        await gateway.salvar(matricula);
+
+        const entrada: IEntradaCancelarMatricula = { alunoId: '123' };
+        const saida = await cancelarMatricula.execute(entrada);
+
+        expect(saida.statusMatricula.id).toBe('123');
+        expect(saida.statusMatricula.status).toBe('cancelado');
     });
 });
