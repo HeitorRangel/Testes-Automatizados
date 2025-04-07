@@ -25,3 +25,7 @@ Thumbs.db
 
 # Arquivos de configuração específicos do TypeScript
 *.tsbuildinfo
+
+# Configurações específicas do TypeScript
+*.tsbuildinfo
+tsconfig.tsbuild.json

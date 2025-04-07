@@ -1,1 +1,1 @@
-# testes-automatizados
+Projeto da matéria de testes automatizados referente ao T1.
