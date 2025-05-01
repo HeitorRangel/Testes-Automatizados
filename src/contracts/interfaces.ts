@@ -1,8 +1,11 @@
-import { StatusMatriculaEnum } from '../domain/entities/status-matricula';
+import { StatusMatriculaEnum, StatusMatricula } from '../domain/entities/status-matricula';
 
 export interface IStatusMatricula {
+  _id: string;
+  _status: StatusMatriculaEnum;
+  _dataMatricula: Date;
   getId(): string;
-  getStatus(): string;
+  getStatus(): StatusMatriculaEnum;
   getDataMatricula(): Date;
   cancelar(): void;
 }
@@ -20,6 +23,14 @@ export interface IEntradaCancelarMatricula {
 }
 
 export interface IStatusMatriculaRepository {
-  buscarPorId(alunoId: string): Promise<IStatusMatricula | null>;
-  salvar(matricula: IStatusMatricula): Promise<void>;
+  buscarPorId(alunoId: string): Promise<StatusMatricula | null>;
+  salvar(statusMatricula: StatusMatricula): Promise<void>;
+  atualizar(statusMatricula: StatusMatricula): Promise<void>;
+  listar(filtros?: ListagemFiltros): Promise<StatusMatricula[]>;
+}
+
+interface ListagemFiltros {
+  status?: StatusMatriculaEnum;
+  dataInicio?: Date;
+  dataFim?: Date;
 }
