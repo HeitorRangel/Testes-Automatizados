@@ -29,7 +29,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src/**/*.{ts,tsx}",
-    "lint:fix": "eslint src/**/*.{ts,tsx} --fix"
+    "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
+    "test:cucumber": "cucumber-js -p default",
+    "test:cucumber:debug": "cucumber-js -p default --tags @debug"
   },
   "eslintConfig": {
     "extends": [
