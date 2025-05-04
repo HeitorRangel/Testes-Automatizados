@@ -47,6 +47,15 @@ export class CancelamentoController {
 
       response.status(200).json(respostaFormatada);
     } catch (error) {
+      // Garantir que erros primitivos sejam tratados como erros internos
+      if (typeof error !== 'object' || error === null) {
+        error = new ApplicationError(
+          'Erro desconhecido', 
+          ErrorType.INTERNAL_ERROR, 
+          500
+        );
+      }
+      
       this.tratarErro(error, response);
     }
   }
@@ -66,25 +75,34 @@ export class CancelamentoController {
           400
         );
       }
-      throw error;
+      // Para qualquer outro tipo de erro, lança como erro interno
+      throw new ApplicationError(
+        'Erro desconhecido', 
+        ErrorType.INTERNAL_ERROR, 
+        500
+      );
     }
   }
 
   private tratarErro(error: unknown, response: Response): void {
     console.error('Erro no cancelamento:', error);
 
+    // Tratar diferentes tipos de erros
     if (error instanceof ApplicationError) {
+      // Manter o status code original para erros de aplicação
       response.status(error.statusCode).json({
         type: error.type,
         message: error.message
       });
     } else if (error instanceof Error) {
+      // Erro interno padrão
       response.status(500).json({
         type: ErrorType.INTERNAL_ERROR,
         message: 'Erro interno do servidor',
         detalhes: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     } else {
+      // Erro desconhecido
       response.status(500).json({
         type: ErrorType.INTERNAL_ERROR,
         message: 'Erro desconhecido'

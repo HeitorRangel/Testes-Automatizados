@@ -124,6 +124,58 @@ describe('CancelamentoController', () => {
     });
   });
 
+  describe('Tratamento de Erros Desconhecidos', () => {
+    it('deve retornar erro 500 para erros não identificados', async () => {
+      const mockCancelarMatricula = {
+        execute: jest.fn().mockRejectedValue(null)
+      } as unknown as CancelarMatricula;
+
+      const controller = new CancelamentoController(mockCancelarMatricula);
+
+      const mockRequest = {
+        params: { alunoId: 'aluno-teste' }
+      } as unknown as Request;
+
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      } as unknown as Response;
+
+      await controller.handle(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        type: 'INTERNAL_ERROR',
+        message: 'Erro desconhecido'
+      });
+    });
+
+    it('deve retornar erro 500 para valores primitivos não tratados', async () => {
+      const mockCancelarMatricula = {
+        execute: jest.fn().mockRejectedValue('string de erro')
+      } as unknown as CancelarMatricula;
+
+      const controller = new CancelamentoController(mockCancelarMatricula);
+
+      const mockRequest = {
+        params: { alunoId: 'aluno-teste' }
+      } as unknown as Request;
+
+      const mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      } as unknown as Response;
+
+      await controller.handle(mockRequest, mockResponse);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        type: 'INTERNAL_ERROR',
+        message: 'Erro desconhecido'
+      });
+    });
+  });
+
   describe('Caso de Sucesso', () => {
     it('deve cancelar matrícula com sucesso', async () => {
       mockRequest = {

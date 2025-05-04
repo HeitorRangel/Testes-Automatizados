@@ -14,7 +14,8 @@ jest.mock('../../models/StatusMatricula', () => ({
     findOne: jest.fn(),
     create: jest.fn(),
     updateOne: jest.fn(),
-    deleteOne: jest.fn()
+    deleteOne: jest.fn(),
+    find: jest.fn()
   }
 }));
 
@@ -113,6 +114,71 @@ describe('StatusMatriculaRepository', () => {
       );
 
       await expect(repository.salvar(statusMatriculaInvalida)).rejects.toThrow(ValidationError);
+    });
+  });
+
+  describe('Validações Específicas', () => {
+    it('deve lançar erro quando status for nulo ou undefined', async () => {
+      // Mock para simular que não existe entrada anterior
+      (StatusMatriculaModel.findOne as jest.Mock).mockResolvedValue(null);
+
+      // criação de um StatusMatricula com status nulo
+      const statusMatriculaInvalida = new StatusMatricula(
+        'aluno1', 
+        new Date()
+      );
+      
+      // Substituir o status por null
+      (statusMatriculaInvalida as any)._status = null;
+
+      await expect(repository.salvar(statusMatriculaInvalida)).rejects.toThrow(ValidationError);
+    });
+
+    it('deve lançar erro quando status for um valor inválido', async () => {
+      const statusMatriculaInvalida = new StatusMatricula(
+        'aluno1', 
+        new Date(), 
+        'STATUS_INVALIDO' as StatusMatriculaEnum
+      );
+
+      await expect(repository.salvar(statusMatriculaInvalida)).rejects.toThrow(ValidationError);
+    });
+
+    it('deve lançar erro quando data de matrícula for nula ou undefined', async () => {
+      const statusMatriculaInvalida = new StatusMatricula(
+        'aluno1', 
+        undefined as unknown as Date, 
+        StatusMatriculaEnum.ATIVO
+      );
+
+      await expect(repository.salvar(statusMatriculaInvalida)).rejects.toThrow(ValidationError);
+    });
+
+    it('deve tratar erro de entrada duplicada do MongoDB', async () => {
+      const statusMatricula = new StatusMatricula(
+        'aluno1', 
+        new Date(), 
+        StatusMatriculaEnum.ATIVO
+      );
+
+      // Simular erro de entrada duplicada do Mongo
+      const mongoDbDuplicateError = new Error('Duplicate key error');
+      (mongoDbDuplicateError as any).code = 11000;
+
+      (StatusMatriculaModel.findOne as jest.Mock).mockResolvedValue(null);
+      (StatusMatriculaModel.create as jest.Mock).mockRejectedValue(mongoDbDuplicateError);
+
+      await expect(repository.salvar(statusMatricula)).rejects.toThrow(DuplicateEntryError);
+    });
+
+    it('deve tratar erro genérico de banco de dados ao listar', async () => {
+      const databaseError = new Error('Erro de conexão genérico');
+
+      (StatusMatriculaModel.find as jest.Mock).mockRejectedValue(databaseError);
+
+      await expect(
+        repository.listar({ status: StatusMatriculaEnum.ATIVO })
+      ).rejects.toThrow(DatabaseError);
     });
   });
 
