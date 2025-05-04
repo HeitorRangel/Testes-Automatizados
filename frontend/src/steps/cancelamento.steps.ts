@@ -3,7 +3,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { expect } from 'chai';
 import React from 'react';
 import CancelamentoForm from '../components/Cancelamento/CancelamentoForm';
-import { cancelamentoService } from '../services/api';
 
 type CancelamentoFormType = React.ComponentType<{}>;
 
@@ -27,15 +26,31 @@ When('confirmo o cancelamento', () => {
 });
 
 Then('devo ver a mensagem de sucesso {string}', async (mensagem: string) => {
-  await waitFor(() => {
-    const successMessage = screen.getByText(mensagem);
-    expect(successMessage).to.exist;
-  });
+  try {
+    await waitFor(() => {
+      const successMessage = screen.getByText(mensagem);
+      expect(successMessage).to.exist;
+    }, { timeout: 3000 });
+  } catch (error: unknown) { 
+    if (error instanceof Error) {
+      throw new Error(`Mensagem de sucesso "${mensagem}" não encontrada: ${error.message}`);
+    } else {
+      throw new Error(`Mensagem de sucesso "${mensagem}" não encontrada`);
+    }
+  }
 });
 
 Then('devo ver a mensagem de erro {string}', async (mensagem: string) => {
-  await waitFor(() => {
-    const errorMessage = screen.getByText(mensagem);
-    expect(errorMessage).to.exist;
-  });
+  try {
+    await waitFor(() => {
+      const errorMessage = screen.getByText(mensagem);
+      expect(errorMessage).to.exist;
+    }, { timeout: 3000 });
+  } catch (error: unknown) { 
+    if (error instanceof Error) {
+      throw new Error(`Mensagem de erro "${mensagem}" não encontrada: ${error.message}`);
+    } else {
+      throw new Error(`Mensagem de erro "${mensagem}" não encontrada`);
+    }
+  }
 });

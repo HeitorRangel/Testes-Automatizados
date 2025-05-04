@@ -8,19 +8,14 @@ module.exports = {
     '**/?(*.)+(spec|test).+(ts|tsx)'
   ],
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1'
   },
   transform: {
-    '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest'
+    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.jsx?$': 'babel-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  transform: {
-    '^.+\\.tsx?$': 'ts-jest'
-  },
-  moduleNameMapper: {
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy', 
-    '^@/(.*)$': '<rootDir>/src/$1'
-  },
   setupFilesAfterEnv: [
     '<rootDir>/src/setupTests.ts'
   ],

@@ -4,11 +4,11 @@
       "snippetInterface": "async-await"
     },
     "paths": [
-      "frontend/src/features/*.feature"
+      "src/features/*.feature"
     ],
     "dryRun": false,
     "require": [
-      "frontend/src/steps/*.ts"
+      "src/steps/*.ts"
     ],
     "format": [
       "pretty",
