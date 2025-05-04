@@ -8,7 +8,8 @@
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "db:connect": "ts-node src/config/database.ts"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^4.18.2",
+    "mongodb": "^6.16.0",
     "mongoose": "^8.14.1",
     "zod": "^3.24.3"
   },
