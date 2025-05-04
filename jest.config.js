@@ -2,21 +2,21 @@
 module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    roots: ['<rootDir>/src'],  // Procurar testes a partir da pasta src
+    roots: ['<rootDir>/src'], 
     testMatch: [
-      '**/tests/**/*.+(spec|test).+(ts|tsx)',  // Encontrar testes em pastas de teste
-      '**/?(*.)+(spec|test).+(ts|tsx)'  // Encontrar testes com nomes terminando em .test.ts ou .spec.ts
+      '**/tests/**/*.+(spec|test).+(ts|tsx)', 
+      '**/?(*.)+(spec|test).+(ts|tsx)'
     ],
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
     transform: {
-      '^.+\\.tsx?$': 'ts-jest'  // Usar ts-jest para transpilar TypeScript
+      '^.+\\.tsx?$': 'ts-jest' 
     },
-    testPathIgnorePatterns: ['/node_modules/'],  // Ignorar pasta node_modules
-    verbose: true,  // Mostrar mais detalhes durante os testes
-    detectOpenHandles: true,  // Detectar handles abertos
-    maxWorkers: '50%',  // Limitar número de workers
-    testTimeout: 30000,  // Aumentar timeout para 30 segundos
-    collectCoverage: true,  // Coletar cobertura de código
+    testPathIgnorePatterns: ['/node_modules/'], 
+    verbose: true, 
+    detectOpenHandles: true, 
+    maxWorkers: '50%', 
+    testTimeout: 30000, 
+    collectCoverage: true, 
     coverageReporters: ['text', 'lcov'],
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.js']  // Arquivo de configuração adicional
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
   };

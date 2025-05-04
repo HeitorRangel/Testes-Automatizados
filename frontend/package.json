@@ -23,16 +23,17 @@
     "web-vitals": "^2.1.4",
     "yup": "^1.6.1"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint src/**/*.{ts,tsx}",
-    "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
-    "test:cucumber": "cucumber-js -p default",
-    "test:cucumber:debug": "cucumber-js -p default --tags @debug"
-  },
+    "scripts": {
+      "start": "react-scripts start",
+      "build": "react-scripts build",
+      "test": "react-scripts test",
+      "test:coverage": "react-scripts test --coverage",
+      "eject": "react-scripts eject",
+      "lint": "eslint src/**/*.{ts,tsx}",
+      "lint:fix": "eslint src/**/*.{ts,tsx} --fix",
+      "test:cucumber": "cucumber-js -p default",
+      "test:cucumber:debug": "cucumber-js -p default --tags @debug"
+    },
   "eslintConfig": {
     "extends": [
       "react-app",
