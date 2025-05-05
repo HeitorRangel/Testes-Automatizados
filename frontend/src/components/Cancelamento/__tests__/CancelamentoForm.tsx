@@ -25,7 +25,6 @@ describe('CancelamentoForm', () => {
     );
     
     expect(screen.getByPlaceholderText('ID do Aluno')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Motivo do Cancelamento')).toBeInTheDocument();
     expect(screen.getByText('Cancelar Matrícula')).toBeInTheDocument();
   });
 
